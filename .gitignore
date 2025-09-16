@@ -1,0 +1,39 @@
+# OS / Editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Node / Vite
+node_modules/
+dist/
+.vite/
+vite.pid
+vite.log
+
+# Env files (keep samples)
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Logs / PIDs
+*.log
+*.pid
+backend.log
+backend.pid
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Misc caches
+.cache/
+coverage/
+
