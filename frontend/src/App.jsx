@@ -53,7 +53,14 @@ function App() {
   const [aura, setAura] = useState(() => localStorage.getItem('sally_aura') || 'default');
   const [theme, setTheme] = useState(() => localStorage.getItem('sally_theme') || 'light');
 
-  const apiBase = import.meta.env.VITE_API_URL;
+  const apiBase = useMemo(() => {
+    const envBase = import.meta.env.VITE_API_URL;
+    if (envBase) return envBase;
+    if (typeof window !== 'undefined') {
+      return `${window.location.protocol}//${window.location.hostname}:8000`;
+    }
+    return 'http://localhost:8000';
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('sally_role', role);
@@ -188,7 +195,17 @@ function App() {
       }
     } catch (e) {
       const status = e?.status ?? 'ERR';
-      const errText = e?.message || 'Request failed';
+      let errText = e?.message || 'Request failed';
+      // Provide friendlier guidance for common backend errors
+      if (status === 401) {
+        errText = 'Invalid OpenAI API key. Add OPENAI_API_KEY to backend/.env and restart the backend.';
+      } else if (status === 500 && /OPENAI_API_KEY is not set/i.test(String(e?.message))) {
+        errText = 'OpenAI API key is missing. Create backend/.env with OPENAI_API_KEY=sk-... and restart the backend.';
+      } else if (status === 403) {
+        errText = 'Permission denied for the model. Ensure your account has access or change OPENAI_MODEL in backend/.env.';
+      } else if (status === 504) {
+        errText = 'Network issue reaching OpenAI from backend. Check internet/proxy and try again.';
+      }
       removeMessageInCurrent(sallyId);
       appendMessagesToCurrent({
         id: `err-${Date.now()}`,
@@ -221,11 +238,7 @@ function App() {
   const closeToast = (id) => setToasts((list) => list.filter((t) => t.id !== id));
 
   const testConnection = async () => {
-    const base = import.meta.env.VITE_API_URL;
-    if (!base) {
-      pushToast('error', 'VITE_API_URL is not set');
-      return;
-    }
+    const base = apiBase;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 4000);
     try {

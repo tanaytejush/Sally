@@ -4,7 +4,10 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "bash scripts/dev.sh",
+    "dev:frontend": "vite",
+    "dev:backend": "bash backend/dev.sh",
+    "check:openai": "python3 backend/scripts/check_openai.py",
     "build": "vite build",
     "preview": "vite preview --port 5173"
   },
@@ -17,4 +20,3 @@
     "vite": "^5.3.0"
   }
 }
-

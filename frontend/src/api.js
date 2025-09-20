@@ -1,18 +1,22 @@
-const BASE = import.meta.env.VITE_API_URL;
+// Resolve API base URL with a sensible fallback for local dev
+const ENV_BASE = import.meta.env.VITE_API_URL;
+const BASE = ENV_BASE || (
+  typeof window !== 'undefined'
+    ? `${window.location.protocol}//${window.location.hostname}:8000`
+    : 'http://localhost:8000'
+);
 const STREAMING = String(import.meta.env.VITE_STREAMING || '').toLowerCase() === 'true';
 
-if (!BASE) {
-  // Fail fast and make it visible
+// If we are using fallback, log a helpful hint
+if (!ENV_BASE) {
   // eslint-disable-next-line no-console
-  console.error('VITE_API_URL is missing. Set it in a .env file at project root.');
+  console.warn(
+    '[sally] VITE_API_URL not set; defaulting to http://localhost:8000. Add VITE_API_URL to .env to silence this.'
+  );
 }
 
 export async function chat(message, role, { stream = STREAMING, onToken } = {}, userNamePreference) {
-  if (!BASE) {
-    const e = new Error('Missing VITE_API_URL');
-    e.status = 0;
-    throw e;
-  }
+  // BASE is always defined due to fallback above
 
   // eslint-disable-next-line no-console
   console.log(`[chat] POST ${stream ? '/chat/stream' : '/chat'} →`, BASE, { role });

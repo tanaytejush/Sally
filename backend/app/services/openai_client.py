@@ -20,6 +20,10 @@ class OpenAIService:
         settings = get_settings()
         if not settings.openai_api_key:
             raise RuntimeError("OPENAI_API_KEY is not set in the environment")
+        if "REPLACE_ME" in settings.openai_api_key:
+            raise RuntimeError(
+                "OPENAI_API_KEY looks like a placeholder. Edit backend/.env and set your real key (sk-...)."
+            )
 
         # Configure client with explicit API key and timeout.
         self.client = OpenAI(api_key=settings.openai_api_key, timeout=settings.request_timeout_seconds)

@@ -4,13 +4,13 @@ A clean, minimal, and calming chatbot interface (React + Vite) with a modular Fa
 
 ## Project Workflow (TL;DR)
 - Install frontend deps: `npm install`
-- Create Python venv and install backend deps: `pip install -r backend/requirements.txt`
-- Export your OpenAI key: `export OPENAI_API_KEY=sk-...`
-- Start backend: `uvicorn backend.app.main:app --reload --port 8000`
-- Start frontend: `npm run dev` (Vite on port 5173)
-- Open the app, type a message, see the gentle aura while Sally replies
+- Create Python venv and install backend deps: `python3 -m venv .venv && source .venv/bin/activate && pip install -r backend/requirements.txt`
+- Copy frontend env: `cp .env.frontend.example .env` (create `backend/.env` manually)
+- Put your OpenAI key in `backend/.env` (or `export OPENAI_API_KEY=sk-...`). The backend reads only `backend/.env` (or process env), not the root `.env`.
+- Start both backend and frontend together: `npm run dev`
+- Open the app at the Vite URL (default `http://localhost:5173`)
 
-Note: The UI routes all answers to the backend. Set `VITE_API_URL` and optionally enable streaming via `VITE_STREAMING=true`.
+Note: The UI routes all answers to the backend. If `VITE_API_URL` is not set, the UI defaults to `http://localhost:8000`. You can override via `VITE_API_URL` and optionally enable streaming via `VITE_STREAMING=true`.
 
 ## Tech Stack
 - Frontend: React 18 + Vite, plain CSS with design tokens and light/dark theme
@@ -20,27 +20,30 @@ Note: The UI routes all answers to the backend. Set `VITE_API_URL` and optionall
 ## Repository Structure
 ```
 .
-├─ index.html
+├─ .env.frontend.example
 ├─ package.json
 ├─ vite.config.js
-├─ src/
-│  ├─ App.jsx
-│  ├─ main.jsx
-│  ├─ styles.css
-│  ├─ assets/
-│  │  └─ sally-avatar.svg
-│  └─ components/
-│     ├─ Header.jsx
-│     ├─ RelationshipToggle.jsx
-│     ├─ ChatWindow.jsx
-│     ├─ MessageBubble.jsx
-│     ├─ Composer.jsx
-│     ├─ Aura.jsx
-│     ├─ TypingDots.jsx
-│     ├─ Sidebar.jsx
-│     ├─ ProfileModal.jsx
-│     ├─ Toast.jsx
-│     └─ Background.jsx
+├─ frontend/
+│  ├─ index.html
+│  └─ src/
+│     ├─ App.jsx
+│     ├─ main.jsx
+│     ├─ styles.css
+│     ├─ api.js
+│     ├─ assets/
+│     │  └─ sally-avatar.svg
+│     └─ components/
+│        ├─ Header.jsx
+│        ├─ RelationshipToggle.jsx
+│        ├─ ChatWindow.jsx
+│        ├─ MessageBubble.jsx
+│        ├─ Composer.jsx
+│        ├─ Aura.jsx
+│        ├─ TypingDots.jsx
+│        ├─ Sidebar.jsx
+│        ├─ ProfileModal.jsx
+│        ├─ Toast.jsx
+│        └─ Background.jsx
 ├─ backend/
 │  ├─ requirements.txt
 │  └─ app/
@@ -53,8 +56,7 @@ Note: The UI routes all answers to the backend. Set `VITE_API_URL` and optionall
 │     │  └─ chat.py
 │     └─ services/
 │        └─ openai_client.py
-├─ SYSTEM_GUIDELINES.md
-└─ README_BACKEND.md
+└─ SYSTEM_GUIDELINES.md
 ```
 
 ## Prerequisites
@@ -63,45 +65,95 @@ Note: The UI routes all answers to the backend. Set `VITE_API_URL` and optionall
 - OpenAI API key with access to a chat‑capable model
 
 ## Environment Variables
-Backend (required/optional):
-- `OPENAI_API_KEY` (required): Your OpenAI key (never commit it)
-- `OPENAI_MODEL` (optional, default `gpt-4o-mini`): Set to a model you have access to (e.g., `gpt-4o` or `gpt-4o-mini`)
-- `REQUEST_TIMEOUT_SECONDS` (optional, default `30`)
-- `CORS_ORIGINS` (optional, defaults include `http://localhost:5173`)
+Keep it simple: two environments, clearly separated.
 
-Frontend:
-- `VITE_API_URL` (e.g., `http://localhost:8000`) — required for sending messages
-- `VITE_STREAMING=true` to enable streaming (SSE) via `/chat/stream`
+- Backend (FastAPI) — lives in `backend/.env` (server-side secrets only):
+  - `OPENAI_API_KEY` (required): Your OpenAI key (never commit it)
+  - `OPENAI_MODEL` (optional, default `gpt-4o-mini`)
+  - `REQUEST_TIMEOUT_SECONDS` (optional, default `30`)
+  - `CORS_ORIGINS` (optional, defaults include `http://localhost:5173`)
 
-Create a `.env` at the project root for Vite and export shell vars for FastAPI, for example:
+- Frontend (Vite) — lives in `.env` at repo root (no secrets):
+  - `VITE_API_URL` (optional; defaults to `http://localhost:8000`) — backend base URL
+  - `VITE_STREAMING=true` (optional) to enable streaming (SSE) via `/chat/stream`
+
+Templates:
+- Frontend: copy `.env.frontend.example` → `.env`
+- Backend: create `backend/.env` and set your secrets
+
+Samples:
 ```
-# .env (Vite reads this at project root)
+# .env (root, used by Vite)
+# Optional: override backend URL (defaults to http://localhost:8000)
 VITE_API_URL=http://localhost:8000
+
+# backend/.env (server-only)
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o-mini
 ```
+
+Tip: If you see repeated "Error 401: Invalid OpenAI API key" in the chat, your backend does not have a valid key. Put it in `backend/.env` and restart the backend. You can quickly verify configuration with `npm run check:openai`. The dev launcher fails fast if the key looks like a placeholder.
+
+Note about stale environment variables: if you previously exported `OPENAI_API_KEY` in your shell or OS, it may have been overriding the value in `backend/.env`, causing confusing 401 errors even after updating the file. The backend now explicitly loads `backend/.env` with override, so values in that file win during local development. If you still run into issues, try `unset OPENAI_API_KEY` in your shell and restart the backend.
 
 ## Running Locally
-1) Backend
-```
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r backend/requirements.txt
-export OPENAI_API_KEY=sk-...             # required
-export OPENAI_MODEL=gpt-4o-mini          # optional: use a model you can access
-uvicorn backend.app.main:app --reload --port 8000
-```
-
-2) Frontend
+1) Install dependencies
 ```
 npm install
+python3 -m venv .venv && source .venv/bin/activate && pip install -r backend/requirements.txt
+```
+
+2) Configure env
+```
+cp .env.frontend.example .env
+# create backend/.env and set OPENAI_API_KEY=sk-...
+```
+
+3) Start both services
+```
 npm run dev
 ```
-Vite prints a local URL (default `http://localhost:5173`). CORS is preconfigured on the backend for local development.
+Vite prints a local URL (default `http://localhost:5173`). The UI uses `http://localhost:8000` by default; set `VITE_API_URL` in `.env` to change it.
+
+Restart tip: After editing `.env`, restart the Vite dev server so changes take effect.
+
+Optional quick check:
+```
+npm run check:openai
+```
+This performs a tiny request to verify your key and model access.
 
 ## Frontend ⇄ Backend
 Requests always go to the backend. A health check is available at `GET /health`.
+- In the UI, use “Test Connection” in the header to ping `/health` and confirm connectivity.
 - Body: `{ message: string, role: 'Brother'|'Sister'|'Husband'|'Wife'|'Girlfriend'|'Boyfriend', userNamePreference?: { type: 'first'|'full'|'custom', name?: string } }`
 - Non-streaming: `POST /chat` returns `{ reply }`
 - Streaming (optional): `POST /chat/stream` emits `data: <token>` lines (SSE).
+
+### Curl Examples
+Non‑streaming:
+```
+curl -X POST http://localhost:8000/chat \
+  -H 'Content-Type: application/json' \
+  -d '{"message":"Hello, Sally!","role":"Sister","userNamePreference":{"type":"first","name":"Alex"}}'
+```
+Response:
+```
+{ "reply": "...", "model": "gpt-4o-mini" }
+```
+
+Streaming:
+```
+curl -N -X POST http://localhost:8000/chat/stream \
+  -H 'Content-Type: application/json' \
+  -d '{"message":"Hello, Sally!","role":"Sister","userNamePreference":{"type":"custom","name":"Lex"}}'
+```
+Outputs lines like:
+```
+data: Hello
+data: ,
+data: Lex!
+```
 
 ## Design & Accessibility
 - See `SYSTEM_GUIDELINES.md` for rules on tone, components, tokens, accessibility, and motion.
@@ -111,7 +163,7 @@ Requests always go to the backend. A health check is available at `GET /health`.
 Frontend:
 - Build: `npm run build`
 - Preview: `npm run preview`
-- Deploy: serve the `dist/` folder behind your web server or host
+- Deploy: serve the `frontend/dist/` folder behind your web server or host
 
 Backend:
 - Dev: `uvicorn backend.app.main:app --reload --port 8000`
@@ -123,9 +175,10 @@ Backend:
 - Model access: If the default model isn’t available, set `OPENAI_MODEL` to one you can use (e.g., `gpt-4o`, `gpt-4o-mini`).
 - Timeouts: Increase `REQUEST_TIMEOUT_SECONDS` if needed.
 - Ports in use: Change Vite port (e.g., `npm run dev -- --port 5174`) or uvicorn port.
+ - Env not taking effect: Restart Vite after changing `.env` at the repo root.
 
 ## Next Steps
-- Ensure `.env` contains `VITE_API_URL` so the UI connects by default.
+- Optionally set `VITE_API_URL` to point the UI at a non-local backend.
 - Add server-side persistence (sessions/messages) beyond current localStorage.
 - Refine dark-mode tokens and accessibility contrast across themes.
 - Add tests (component tests for UI; route tests for backend) and CI.
