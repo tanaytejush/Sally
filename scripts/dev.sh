@@ -8,7 +8,7 @@ ROOT_DIR="${SCRIPT_DIR}/.."
 cd "$ROOT_DIR"
 
 BACKEND_CMD=(bash backend/dev.sh)
-FRONTEND_CMD=(vite)
+FRONTEND_CMD=(npx vite)
 
 echo "[dev] Starting backend and frontend..."
 
