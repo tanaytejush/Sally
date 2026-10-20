@@ -42,3 +42,78 @@ All interactions maintain healthy boundaries and avoid dependency-creating langu
 - **Connection Testing**: Built-in health check for backend connectivity
 - **Accessibility**: WCAG AA contrast compliance, full keyboard support, ARIA live regions
 - **Performance**: Lightweight bundle, optimized assets, lazy loading ready
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Frontend | React, Vite |
+| Backend | Python, FastAPI, Uvicorn |
+| AI | OpenAI Chat Completions API (default model `gpt-4o-mini`) |
+| Deployment | Vercel config included (`vercel.json`) |
+
+## Getting Started
+
+### Prerequisites
+- Node.js 18+
+- Python 3.10+
+- An [OpenAI API key](https://platform.openai.com/api-keys)
+
+### 1. Install
+
+```bash
+npm install
+cd backend
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+cd ..
+```
+
+### 2. Configure
+
+Create `backend/.env`:
+
+```env
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=gpt-4o-mini
+```
+
+Optionally create a `.env` in the project root for the frontend:
+
+```env
+VITE_API_URL=http://localhost:8000
+VITE_STREAMING=true
+```
+
+`VITE_STREAMING=true` turns on token-by-token streaming. Never commit your `.env` files.
+
+### 3. Run
+
+```bash
+npm run dev
+```
+
+This starts the FastAPI backend (http://localhost:8000) and the Vite frontend together. You can run them separately with `npm run dev:backend` and `npm run dev:frontend`.
+
+To check that your OpenAI key works: `npm run check:openai`.
+
+## Project Structure
+
+```
+backend/
+  app/
+    main.py              FastAPI app
+    config.py            Settings from environment variables
+    routers/chat.py      POST /chat and POST /chat/stream
+    services/openai_client.py
+frontend/
+  src/
+    App.jsx
+    components/          Chat window, sidebar, profile, aura and more
+    api.js               Backend client
+```
+
+## Disclaimer
+
+Sally is a supportive companion, not a medical or mental health service, and does not provide diagnosis or treatment. If you are in crisis, please contact a local emergency number or a qualified professional.
