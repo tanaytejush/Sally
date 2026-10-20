@@ -117,3 +117,8 @@ frontend/
 ## Disclaimer
 
 Sally is a supportive companion, not a medical or mental health service, and does not provide diagnosis or treatment. If you are in crisis, please contact a local emergency number or a qualified professional.
+
+
+---
+
+<sub>Made by [tanaytejush](https://github.com/tanaytejush)</sub>
